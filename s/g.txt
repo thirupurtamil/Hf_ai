@@ -1,0 +1,15 @@
+Hf_ai/
+ ├── manage.py
+ ├── mobile_ai_django/         <---- இந்த அடைப்பு வேண்டும்
+ │     ├── __init__.py
+ │     ├── settings.py
+ │     ├── urls.py
+ │     ├── wsgi.py
+ │     ├── asgi.py
+ │     └── celery_config.py (optional)
+ ├── ai_chatbot/               <---- உங்கள் app folder
+ │     ├── models.py
+ │     ├── views.py
+ │     └── ...
+ ├── requirements.txt
+ └── venv/
