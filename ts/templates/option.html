@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Black-Scholes Option Price Calculator</title>
+</head>
+<body>
+    <h1>Black-Scholes Option Price Calculator</h1>
+    <form method="post" action="">
+        {% csrf_token %}
+        <label>Spot Price (S): </label>
+        <input type="number" step="0.01" name="spot" required><br><br>
+
+        <label>Strike Price (K): </label>
+        <input type="number" step="0.01" name="strike" required><br><br>
+
+        <label>Days to Expiry: </label>
+        <input type="number" name="days" required><br><br>
+
+        <label>Implied Volatility (IV %): </label>
+        <input type="number" step="0.01" name="iv" required><br><br>
+
+        <label>Risk-free Rate (%): </label>
+        <input type="number" step="0.01" name="r" required><br><br>
+
+        <label>Option Type: </label>
+        <select name="option_type" required>
+            <option value="call">Call</option>
+            <option value="put">Put</option>
+        </select><br><br>
+
+        <button type="submit">Calculate Premium</button>
+    </form>
+
+    {% if premium %}
+        <h2>Option Premium: {{ premium }}</h2>
+    {% endif %}
+</body>
+</html>
