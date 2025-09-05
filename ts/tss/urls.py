@@ -1,5 +1,5 @@
 from django.urls import path,include 
-from tss.views import *
+from tss import views 
 
 
 urlpatterns = [
