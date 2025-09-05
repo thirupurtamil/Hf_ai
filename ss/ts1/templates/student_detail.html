@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+{%include 'papa/nav.html'%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Student Detail</h1> 
+<h2><a href="{% url 'student_list' %}" class="btn btn-outline-secondary" ">Home</a> 
+<h3>ID : {{ object.id }}</h3>
+<h3>Name : {{ object.name }}</h3>
+<h3>code : {{ object.identityNumber }}</h3>
+<h3>Address : {{ object.address }}</h3>
+<h3>Department : {{ object.department }}</h3>
+
+<h3>country : {{ object.mobile }}</h3>
+<h3>position : {{ object.position }}</h3>
+<h3>Time: {{ object.file }}</h3>
+</body>
+{% endblock content %}
+
+</html>
