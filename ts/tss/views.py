@@ -1,10 +1,10 @@
 import math
-from scipy.stats import norm
+#from scipy.stats import norm
 from django.shortcuts import render
 import requests
 import time
 from datetime import datetime
-# Create your views here.
+
 
     
     
