@@ -7,7 +7,7 @@ from channels.layers import get_channel_layer
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=5)
 def fetch_nse_data(self):
-    url = "https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY"
+    url = "https://www.nseindia.com/get-quotes/derivatives?symbol=NIFTY"
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64)",
         "Accept-Language": "en-US,en;q=0.9",

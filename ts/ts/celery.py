@@ -12,6 +12,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "fetch-nse-every-5-sec": {
         "task": "home.tasks.fetch_nse_data",
-        "schedule": 60.0,   # seconds
+        "schedule": 30.0,   # seconds
     },
 }
