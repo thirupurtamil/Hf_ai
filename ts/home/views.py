@@ -581,7 +581,7 @@ def home1(request):
 
 
 
-        'raj':raj,'n50':n50, 'n55':n55,'n56':n56,'pre':pre,'hpre':hpre,}
+        'raj':raj,'n50':n50,}
       
 
 
