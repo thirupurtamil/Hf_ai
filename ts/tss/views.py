@@ -27,7 +27,7 @@ def black_scholes(S, K, T, r, sigma, option_type='call'):
     else:
         return K * math.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
 
-def option_price_view(request):
+def option(request):
     premium = None
     if request.method == 'POST':
         try:
