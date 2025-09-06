@@ -605,7 +605,6 @@ def home1(request):
 """
 
 
-
 # home/views.py
 from django.shortcuts import render
 
@@ -614,11 +613,7 @@ def home1(request):
     context = {
         "title": "Live NSE Dashboard",
     }
-    return render(request, "home1.html", context
-
-    
-   
-   
+    return render(request, "home1.html", context)
      
     
 
