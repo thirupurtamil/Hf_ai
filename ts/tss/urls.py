@@ -4,10 +4,9 @@ from tss import views
 
 urlpatterns = [
     
-    path ('',views.index,name='joke'),
-    path('greeks/', views.option_price_view, name='option_price'),
- 
-   
- 
-   
+    path('', views.index, name='index'),
+    path('option/', views.option, name='option'),
 ]
+   
+ 
+   

@@ -3,12 +3,11 @@ from home import views
 
 
 urlpatterns = [
-    
-    path ('acb',views.home1,name='acb'),
+    path('acb/', views.home1, name='acb'),
+]
    
     
     
    
  
    
-]
