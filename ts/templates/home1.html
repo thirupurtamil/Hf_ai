@@ -415,6 +415,25 @@
         </div>
         {% endblock content %}
     </div>
+
+
+    <title>Live WebSocket Data</title>
+    <h2>📡 Live Market Data</h2>
+    <div id="output">Waiting for live updates...</div>
+
+    <script>
+        const socket = new WebSocket("ws://127.0.0.1:8000/ws/live-data/");
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            document.getElementById("output").innerHTML =
+                "NIFTY: " + data.nifty + " | VOLUME: " + data.volume;
+        };
+
+        socket.onclose = function(e) {
+            console.error("WebSocket closed unexpectedly");
+        };
+    </script>
 </body>
 
 </html>
