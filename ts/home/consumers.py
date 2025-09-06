@@ -1,22 +1,18 @@
+# home/consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-import asyncio
 
 class LiveDataConsumer(AsyncWebsocketConsumer):
+    GROUP_NAME = "live_data_group"
+
     async def connect(self):
+        await self.channel_layer.group_add(self.GROUP_NAME, self.channel_name)
         await self.accept()
-        asyncio.create_task(self.send_data())
 
     async def disconnect(self, close_code):
-        print("Client disconnected", close_code)
+        await self.channel_layer.group_discard(self.GROUP_NAME, self.channel_name)
 
-    async def send_data(self):
-        count = 1
-        while True:
-            data = {
-                "nifty": 19800 + count,
-                "volume": 1200 + (count * 10),
-            }
-            await self.send(text_data=json.dumps(data))
-            count += 1
-            await asyncio.sleep(3)  # send every 3 sec
+    # receive messages from group (sent by Celery via channel layer)
+    async def live_data_message(self, event):
+        # event expected to carry 'text' JSON string
+        await self.send(text_data=event["text"])

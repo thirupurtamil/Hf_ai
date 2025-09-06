@@ -14,7 +14,7 @@ import json
 
 
 
-
+"""
 
 
 def md():
@@ -602,11 +602,19 @@ def home1(request):
 
 
 
+"""
 
 
 
+# home/views.py
+from django.shortcuts import render
 
-
+def home1(request):
+    # minimal context; உனக்கு தேவையான data மேலே Celery மூலம் real-time வரும்
+    context = {
+        "title": "Live NSE Dashboard",
+    }
+    return render(request, "home1.html", context
 
     
    
