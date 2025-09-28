@@ -1,0 +1,45 @@
+<!-- templates/home1.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Live NSE</title>
+</head>
+<body>
+    <h2>Live NSE Data (WebSocket)</h2>
+    <div id="output">Waiting for updates...</div>
+
+    <script>
+        const out = document.getElementById("output");
+
+        // use ws or wss depending on your deploy
+        const socket = new WebSocket("ws://" + window.location.host + "/ws/live-data/");
+
+        socket.onopen = function() {
+            out.innerHTML = "Connected — waiting for live updates...";
+        };
+
+        socket.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.error) {
+                    out.innerHTML = "⚠️ Error: " + data.error;
+                } else {
+                    out.innerHTML = `NIFTY: ${data.nifty} | CALL_OI: ${data.call_oi} | PUT_OI: ${data.put_oi}`;
+                }
+            } catch (err) {
+                out.innerHTML = "Malformed data: " + e.data;
+            }
+        };
+
+        socket.onclose = function(e) {
+            out.innerHTML = "WebSocket closed";
+            console.error("socket closed", e);
+        };
+
+        socket.onerror = function(err) {
+            console.error("socket error", err);
+        };
+    </script>
+</body>
+</html>

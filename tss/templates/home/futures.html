@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Futures{% endblock %}
+
+{% block content %}
+<h1>Futures</h1>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Expiry</th><th>Last Price</th><th>Change</th><th>OI</th><th>Volume</th>
+        </tr>
+    </thead>
+    <tbody id="futures-body"></tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateRowFast(row, data, columns){
+    columns.forEach(col => {
+        const cell = row.querySelector(`[data-col="${col}"]`);
+        if(cell && cell.innerText != data[col]){
+            cell.className = (parseFloat(data[col]) > parseFloat(cell.innerText || 0)) ? "price-up" : "price-down";
+            cell.innerText = data[col];
+        }
+    });
+}
+
+function renderTableFast(bodyId, data, columns){
+    const tbody = document.getElementById(bodyId);
+    data.forEach((rowData, i)=>{
+        let tr = tbody.rows[i];
+        if(!tr){
+            tr = tbody.insertRow();
+            columns.forEach(col=>{
+                const td = tr.insertCell();
+                td.setAttribute("data-col", col);
+            });
+        }
+        updateRowFast(tr, rowData, columns);
+    });
+}
+
+const wsFutures = new WebSocket("ws://localhost:8000/ws/futures/");
+wsFutures.onmessage = (event)=>{
+    const data = JSON.parse(event.data);
+    renderTableFast("futures-body", data.futures, ["expiry","lastPrice","change","oi","volume"]);
+};
+</script>
+{% endblock %}

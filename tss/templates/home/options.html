@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Options{% endblock %}
+
+{% block content %}
+<h1>Options Chain</h1>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Strike</th><th>Call OI</th><th>Call LTP</th><th>Put OI</th><th>Put LTP</th>
+        </tr>
+    </thead>
+    <tbody id="options-body"></tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const wsOptions = new WebSocket("ws://localhost:8000/ws/options/");
+wsOptions.onmessage = (event)=>{
+    const data = JSON.parse(event.data);
+    renderTableFast("options-body", data.options, ["Strike","Call_OI","Call_LTP","Put_OI","Put_LTP"]);
+};
+</script>
+{% endblock %}

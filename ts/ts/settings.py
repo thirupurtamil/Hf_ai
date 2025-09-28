@@ -72,21 +72,21 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 
-
-# Celery / Redis
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "Asia/Kolkata"
-
-ASGI_APPLICATION = "ts.asgi.application"
-
-# Channels layer with Redis
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
-    }
+    },
+}
+
+# Celery + Redis
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    "fetch-nse-data-30s": {
+        "task": "home.tasks.fetch_nse_data",
+        "schedule": 30.0,
+    },
 }

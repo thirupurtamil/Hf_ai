@@ -1,0 +1,130 @@
+{% extends "home/base.html" %}
+
+{% block title %}NSE Dashboard{% endblock %}
+
+{% block content %}
+<h1>NSE Live Dashboard</h1>
+
+<!-- Nifty Live -->
+<h2>NIFTY 50 Live: <span id="nifty-price">Loading...</span></h2>
+<p>Open: <span id="nifty-open"></span>, High: <span id="nifty-high"></span>, Low: <span id="nifty-low"></span></p>
+<p id="market-status">Market status: Loading...</p>
+
+<!-- Futures Table -->
+<h2>Futures</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Expiry</th>
+            <th>Last Price</th>
+            <th>Change</th>
+            <th>OI</th>
+            <th>Volume</th>
+        </tr>
+    </thead>
+    <tbody id="futures-body"></tbody>
+</table>
+
+<!-- Options Table -->
+<h2>Options</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Strike</th>
+            <th>Call OI</th>
+            <th>Call LTP</th>
+            <th>Put OI</th>
+            <th>Put LTP</th>
+        </tr>
+    </thead>
+    <tbody id="options-body"></tbody>
+</table>
+
+<!-- Contracts Table -->
+<h2>Active Contracts</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Strike</th>
+            <th>Option</th>
+            <th>LTP</th>
+            <th>OI</th>
+        </tr>
+    </thead>
+    <tbody id="contracts-body"></tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Nifty WebSocket
+    const wsNifty = new WebSocket("ws://localhost:8000/ws/nifty/");
+    wsNifty.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if(!data.error){
+            const priceEl = document.getElementById("nifty-price");
+            const oldPrice = parseFloat(priceEl.innerText) || 0;
+            const newPrice = parseFloat(data.lastPrice);
+            priceEl.className = newPrice > oldPrice ? "price-up" : newPrice < oldPrice ? "price-down" : "";
+            priceEl.innerText = `${data.lastPrice} (${data.change})`;
+            document.getElementById("nifty-open").innerText = data.open;
+            document.getElementById("nifty-high").innerText = data.dayHigh;
+            document.getElementById("nifty-low").innerText = data.dayLow;
+        }
+    };
+
+    // Market WebSocket
+    const wsMarket = new WebSocket("ws://localhost:8000/ws/market/");
+    wsMarket.onmessage = (event) => {
+        const market = JSON.parse(event.data).market;
+        document.getElementById("market-status").innerText = `${market.timestamp} | ${market.status}`;
+    };
+
+    // Generic table render function
+    function updateRowFast(row, data, columns){
+        columns.forEach(col => {
+            const cell = row.querySelector(`[data-col="${col}"]`);
+            if(cell && cell.innerText != data[col]){
+                cell.className = (parseFloat(data[col]) > parseFloat(cell.innerText || 0)) ? "price-up" : "price-down";
+                cell.innerText = data[col];
+            }
+        });
+    }
+
+    function renderTableFast(bodyId, data, columns){
+        const tbody = document.getElementById(bodyId);
+        data.forEach((rowData, i) => {
+            let tr = tbody.rows[i];
+            if(!tr){
+                tr = tbody.insertRow();
+                columns.forEach(col => {
+                    const td = tr.insertCell();
+                    td.setAttribute("data-col", col);
+                });
+            }
+            updateRowFast(tr, rowData, columns);
+        });
+    }
+
+    // Futures WebSocket
+    const wsFutures = new WebSocket("ws://localhost:8000/ws/futures/");
+    wsFutures.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        renderTableFast("futures-body", data.futures, ["expiry","lastPrice","change","oi","volume"]);
+    };
+
+    // Options WebSocket
+    const wsOptions = new WebSocket("ws://localhost:8000/ws/options/");
+    wsOptions.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        renderTableFast("options-body", data.options, ["Strike","Call_OI","Call_LTP","Put_OI","Put_LTP"]);
+    };
+
+    // Contracts WebSocket
+    const wsContracts = new WebSocket("ws://localhost:8000/ws/contracts/");
+    wsContracts.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        renderTableFast("contracts-body", data.contracts, ["Strike","Option","ltp","oi"]);
+    };
+</script>
+{% endblock %}

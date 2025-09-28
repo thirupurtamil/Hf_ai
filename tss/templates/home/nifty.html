@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Nifty Live{% endblock %}
+
+{% block content %}
+<h1>Nifty Live</h1>
+<h2>NIFTY 50: <span id="nifty-price">Loading...</span></h2>
+<p>Open: <span id="nifty-open"></span>, High: <span id="nifty-high"></span>, Low: <span id="nifty-low"></span></p>
+<p id="market-status">Market status: Loading...</p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const wsNifty = new WebSocket("ws://localhost:8000/ws/nifty/");
+wsNifty.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if(!data.error){
+        const priceEl = document.getElementById("nifty-price");
+        const oldPrice = parseFloat(priceEl.innerText) || 0;
+        const newPrice = parseFloat(data.lastPrice);
+        priceEl.className = newPrice > oldPrice ? "price-up" : newPrice < oldPrice ? "price-down" : "";
+        priceEl.innerText = `${data.lastPrice} (${data.change})`;
+        document.getElementById("nifty-open").innerText = data.open;
+        document.getElementById("nifty-high").innerText = data.dayHigh;
+        document.getElementById("nifty-low").innerText = data.dayLow;
+    }
+};
+
+const wsMarket = new WebSocket("ws://localhost:8000/ws/market/");
+wsMarket.onmessage = (event) => {
+    const market = JSON.parse(event.data).market;
+    document.getElementById("market-status").innerText = `${market.timestamp} | ${market.status}`;
+};
+</script>
+{% endblock %}

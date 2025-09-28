@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIFTY Option Chain</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f4f7fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .table-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .table thead th {
+            background-color: #343a40;
+            color: white;
+        }
+        .call-row {
+            background-color: #e6ffe6 !important; /* Light Green for Call */
+        }
+        .put-row {
+            background-color: #ffe6e6 !important; /* Light Red for Put */
+        }
+        h2, h3 {
+            color: #343a40;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">NIFTY Option Chain Analysis</h2>
+        <div class="card mb-4">
+            <div class="card-header">Summary</div>
+            <div class="card-body">
+                <p><strong>NIFTY50:</strong> {{ nifty50 }}</p>
+                <p><strong>நடப்பு காலாவதி:</strong> {{ selected_expiry }}</p>
+                <p><strong>நேரம்:</strong> {{ summary['நேரம்'] }}</p>
+                <p><strong>கால் OI:</strong> {{ summary['கால் OI'] }}</p>
+                <p><strong>புட் OI:</strong> {{ summary['புட் OI'] }}</p>
+                <p><strong>கால் வால்யூம்:</strong> {{ summary['கால் வால்யூம்'] }}</p>
+                <p><strong>புட் வால்யூம்:</strong> {{ summary['புட் வால்யூம்'] }}</p>
+                <p><strong>வால்யூம் வேறுபாடு:</strong> {{ summary['வால்யூம் வேறுபாடு'] }}</p>
+                <p><strong>போக்கு:</strong> {{ summary['போக்கு'] }}</p>
+                <p><strong>PCR (OI):</strong> {{ summary['PCR (OI)'] }}</p>
+                <p><strong>PCR (வால்யூம்):</strong> {{ summary['PCR (வால்யூம்)'] }}</p>
+            </div>
+        </div>
+
+        <!-- Option Chain Table -->
+        <div class="table-container">
+            <h3>Option Chain Table</h3>
+            <table id="optionChainTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Call OI</th>
+                        <th>Call Change OI</th>
+                        <th>Call Volume</th>
+                        <th>Call IV</th>
+                        <th>Call Open</th>
+                        <th>Call High</th>
+                        <th>Call Low</th>
+                        <th>Call Close</th>
+                        <th>Call LTP</th>
+                        <th>Call Value</th>
+                        <th>Call Strategy</th>
+                        <th>Strike Price</th>
+                        <th>Put OI</th>
+                        <th>Put Change OI</th>
+                        <th>Put Volume</th>
+                        <th>Put IV</th>
+                        <th>Put Open</th>
+                        <th>Put High</th>
+                        <th>Put Low</th>
+                        <th>Put Close</th>
+                        <th>Put LTP</th>
+                        <th>Put Value</th>
+                        <th>Put Strategy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in filtered_data %}
+                    <tr>
+                        <td>{{ row['Call OI'] }}</td>
+                        <td>{{ row['Call Change OI'] }}</td>
+                        <td>{{ row['Call Volume'] }}</td>
+                        <td>{{ row['Call IV'] }}</td>
+                        <td>{{ row['Call Open'] }}</td>
+                        <td>{{ row['Call High'] }}</td>
+                        <td>{{ row['Call Low'] }}</td>
+                        <td>{{ row['Call Close'] }}</td>
+                        <td>{{ row['Call LTP'] }}</td>
+                        <td>{{ row['Call Value'] }}</td>
+                        <td>{{ row['Call Strategy'] }}</td>
+                        <td>{{ row['Strike Price'] }}</td>
+                        <td>{{ row['Put OI'] }}</td>
+                        <td>{{ row['Put Change OI'] }}</td>
+                        <td>{{ row['Put Volume'] }}</td>
+                        <td>{{ row['Put IV'] }}</td>
+                        <td>{{ row['Put Open'] }}</td>
+                        <td>{{ row['Put High'] }}</td>
+                        <td>{{ row['Put Low'] }}</td>
+                        <td>{{ row['Put Close'] }}</td>
+                        <td>{{ row['Put LTP'] }}</td>
+                        <td>{{ row['Put Value'] }}</td>
+                        <td>{{ row['Put Strategy'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Active Contracts Table -->
+        <div class="table-container">
+            <h3>Active Contracts Table</h3>
+            <table id="activeContractsTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Strike Price</th>
+                        <th>Type</th>
+                        <th>Volume</th>
+                        <th>OI</th>
+                        <th>Change OI</th>
+                        <th>LTP</th>
+                        <th>IV</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Close</th>
+                        <th>Value</th>
+                        <th>Strategy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in high_vol_data %}
+                    <tr class="{{ 'call-row' if row['Type'] == 'Call' else 'put-row' }}">
+                        <td>{{ row['S.No'] }}</td>
+                        <td>{{ row['Strike Price'] }}</td>
+                        <td>{{ row['Type'] }}</td>
+                        <td>{{ row['Volume'] }}</td>
+                        <td>{{ row['OI'] }}</td>
+                        <td>{{ row['Change OI'] }}</td>
+                        <td>{{ row['LTP'] }}</td>
+                        <td>{{ row['IV'] }}</td>
+                        <td>{{ row['Open'] }}</td>
+                        <td>{{ row['High'] }}</td>
+                        <td>{{ row['Low'] }}</td>
+                        <td>{{ row['Close'] }}</td>
+                        <td>{{ row['Value'] }}</td>
+                        <td>{{ row['Strategy'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Range Table -->
+        <div class="table-container">
+            <h3>Range Table</h3>
+            <table id="rangeTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Range Up</th>
+                        <th>Range Down</th>
+                        <th>Range</th>
+                        <th>Call Count</th>
+                        <th>Put Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in range_data %}
+                    <tr>
+                        <td>{{ row['Range Up'] }}</td>
+                        <td>{{ row['Range Down'] }}</td>
+                        <td>{{ row['Range'] }}</td>
+                        <td>{{ row['Call Count'] }}</td>
+                        <td>{{ row['Put Count'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Missing Pairs Table -->
+        <div class="table-container">
+            <h3>Missing Pairs Table</h3>
+            <table id="missingTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Missing Pair</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in missing_data %}
+                    <tr>
+                        <td>{{ row['Missing Pair'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LTP Similarity -->
+        <div class="card mb-4">
+            <div class="card-header">LTP Similarity</div>
+            <div class="card-body">
+                {% if ltp_similarity.message %}
+                <p>{{ ltp_similarity.message }}</p>
+                {% endif %}
+                {% if ltp_similarity.matches %}
+                <h4>Matches (LTP Difference <= 1)</h4>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Strike Price</th>
+                            <th>Time</th>
+                            <th>Call LTP</th>
+                            <th>Put LTP</th>
+                            <th>Total LTP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in ltp_similarity.matches %}
+                        <tr>
+                            <td>{{ match['Strike Price'] }}</td>
+                            <td>{{ match['Time'] }}</td>
+                            <td>{{ match['Call LTP'] }}</td>
+                            <td>{{ match['Put LTP'] }}</td>
+                            <td>{{ match['Total LTP'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+                {% if ltp_similarity.closest %}
+                <h4>Closest LTP Match</h4>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Strike Price</th>
+                            <th>Time</th>
+                            <th>Call LTP</th>
+                            <th>Put LTP</th>
+                            <th>Total LTP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ ltp_similarity.closest['Strike Price'] }}</td>
+                            <td>{{ ltp_similarity.closest['Time'] }}</td>
+                            <td>{{ ltp_similarity.closest['Call LTP'] }}</td>
+                            <td>{{ ltp_similarity.closest['Put LTP'] }}</td>
+                            <td>{{ ltp_similarity.closest['Total LTP'] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Max OI Pair -->
+        <div class="card mb-4">
+            <div class="card-header">Max OI Pair Analysis</div>
+            <div class="card-body">
+                {% if max_oi_pair.message %}
+                <p>{{ max_oi_pair.message }}</p>
+                {% else %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ஸ்ட்ரைக் விலை</th>
+                            <th>கால் க்ளோஸ்</th>
+                            <th>புட் க்ளோஸ்</th>
+                            <th>கால் மதிப்பு</th>
+                            <th>புட் மதிப்பு</th>
+                            <th>BEP1</th>
+                            <th>BEP2</th>
+                            <th>BEP3</th>
+                            <th>BEP4</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ max_oi_pair.result['ஸ்ட்ரைக் விலை'] }}</td>
+                            <td>{{ max_oi_pair.result['கால் க்ளோஸ்'] }}</td>
+                            <td>{{ max_oi_pair.result['புட் க்ளோஸ்'] }}</td>
+                            <td>{{ max_oi_pair.result['கால் மதிப்பு'] }}</td>
+                            <td>{{ max_oi_pair.result['புட் மதிப்பு'] }}</td>
+                            <td>{{ max_oi_pair.result['BEP1 (கால் க்ளோஸ் + ஸ்ட்ரைக்)'] }}</td>
+                            <td>{{ max_oi_pair.result['BEP2 (புட் க்ளோஸ் - ஸ்ட்ரைக்)'] }}</td>
+                            <td>{{ max_oi_pair.result['BEP3 (கால் + புட் க்ளோஸ் + ஸ்ட்ரைக்)'] }}</td>
+                            <td>{{ max_oi_pair.result['BEP4 (கால் + புட் க்ளோஸ் - ஸ்ட்ரைக்)'] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Max Value Pair -->
+        <div class="card mb-4">
+            <div class="card-header">Max Value Pair Analysis</div>
+            <div class="card-body">
+                {% if max_value_pair.message %}
+                <p>{{ max_value_pair.message }}</p>
+                {% else %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ஸ்ட்ரைக் விலை</th>
+                            <th>கால் க்ளோஸ்</th>
+                            <th>புட் க்ளோஸ்</th>
+                            <th>கால் மதிப்பு</th>
+                            <th>புட் மதிப்பு</th>
+                            <th>BEP1</th>
+                            <th>BEP2</th>
+                            <th>BEP3</th>
+                            <th>BEP4</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ max_value_pair.result['ஸ்ட்ரைக் விலை'] }}</td>
+                            <td>{{ max_value_pair.result['கால் க்ளோஸ்'] }}</td>
+                            <td>{{ max_value_pair.result['புட் க்ளோஸ்'] }}</td>
+                            <td>{{ max_value_pair.result['கால் மதிப்பு'] }}</td>
+                            <td>{{ max_value_pair.result['புட் மதிப்பு'] }}</td>
+                            <td>{{ max_value_pair.result['BEP1 (கால் க்ளோஸ் + ஸ்ட்ரைக்)'] }}</td>
+                            <td>{{ max_value_pair.result['BEP2 (புட் க்ளோஸ் - ஸ்ட்ரைக்)'] }}</td>
+                            <td>{{ max_value_pair.result['BEP3 (கால் + புட் க்ளோஸ் + ஸ்ட்ரைக்)'] }}</td>
+                            <td>{{ max_value_pair.result['BEP4 (கால் + புட் க்ளோஸ் - ஸ்ட்ரைக்)'] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Custom JS -->
+    <script>
+        $(document).ready(function() {
+            // Option Chain Table
+            $('#optionChainTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                order: [[11, 'desc']] // Sort by Strike Price
+            });
+
+            // Active Contracts Table
+            $('#activeContractsTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                order: [[0, 'asc']] // Sort by S.No
+            });
+
+            // Range Table
+            $('#rangeTable').DataTable({
+                pageLength: 1,
+                responsive: true,
+                ordering: false, // No sorting for single row
+                searching: false, // No searching for single row
+                paging: false // No pagination for single row
+            });
+
+            // Missing Pairs Table
+            $('#missingTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                ordering: false // No sorting for simplicity
+            });
+        });
+    </script>
+</body>
+</html>

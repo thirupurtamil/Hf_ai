@@ -1,65 +1,65 @@
-# home/tasks.py (final copy)
-import json
 from celery import shared_task
 import requests
+import pandas as pd
+import redis
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=5)
-def fetch_nse_data(self):
-    url = "https://www.nseindia.com/get-quotes/derivatives?symbol=NIFTY"
+# Redis connection
+redis_client = redis.Redis(host="127.0.0.1", port=6379, db=0)
+
+@shared_task
+def fetch_nse_data():
+    data = []
+
     headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64)",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept": "application/json, text/plain, */*",
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
     }
 
-    try:
-        s = requests.Session()
-        s.get("https://www.nseindia.com", headers=headers, timeout=5)
-        resp = s.get(url, headers=headers, timeout=10)
-        resp.raise_for_status()
-        data = resp.json()
+    with requests.Session() as req:
+        req.get('https://www.nseindia.com/get-quotes/derivatives?symbol=NIFTY', headers=headers)
+        api_req = req.get('https://www.nseindia.com/api/quote-derivative?symbol=NIFTY', headers=headers).json()
+        
+        for item in api_req['stocks']:
+            data.append([
+                item['metadata']['strikePrice'],
+                item['metadata']['optionType'],
+                item['metadata']['openPrice'],
+                item['metadata']["highPrice"],
+                item['metadata']['lowPrice'],
+                item['metadata']['lastPrice'],
+                item['metadata']['numberOfContractsTraded'],
+                item['metadata']['totalTurnover'],
+                item['marketDeptOrderBook']['tradeInfo']['changeinOpenInterest'],
+                item['marketDeptOrderBook']['tradeInfo']['openInterest'],
+                item['underlyingValue'],
+                item['metadata']['expiryDate'],
+                item['marketDeptOrderBook']['otherInfo']['impliedVolatility']
+            ])
 
-        underlying = data.get("records", {}).get("underlyingValue")
-        rows = data.get("records", {}).get("data", [])
-        ce_oi = None
-        pe_oi = None
-        if rows:
-            first = rows[0]
-            ce = first.get("CE")
-            pe = first.get("PE")
-            if ce:
-                ce_oi = ce.get("openInterest")
-            if pe:
-                pe_oi = pe.get("openInterest")
+    df = pd.DataFrame(
+        data,
+        columns=[
+            'Strike', 'Option', 'open', 'high', 'low', 'ltp',
+            'volume', 'value', 'change', 'open_in',
+            'n50', 'expriydate', 'iv'
+        ]
+    )
 
-        payload = {"nifty": underlying, "call_oi": ce_oi, "put_oi": pe_oi}
+    print(df.head(1))
+    result = df.to_dict(orient="records")
 
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "live_data_group",
-            {"type": "live_data_message", "text": json.dumps(payload)},
-        )
+    # Save Redis
+    redis_client.set("nse:data", str(result))
 
-        return payload
+    # Push via WebSocket
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "live_data",
+        {
+            "type": "send.live.data",
+            "message": result,
+        }
+    )
 
-    except requests.exceptions.RequestException as exc:
-        try:
-            raise self.retry(exc=exc)
-        except self.MaxRetriesExceededError:
-            error_payload = {"error": f"Max retries exceeded: {str(exc)}"}
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                "live_data_group",
-                {"type": "live_data_message", "text": json.dumps(error_payload)},
-            )
-            return {"error": str(exc)}
-    except Exception as exc:
-        error_payload = {"error": str(exc)}
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "live_data_group",
-            {"type": "live_data_message", "text": json.dumps(error_payload)},
-        )
-        return {"error": str(exc)}
+    return result
